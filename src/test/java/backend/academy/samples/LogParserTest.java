@@ -102,7 +102,7 @@ public class LogParserTest {
         MarkdownFormatter formatter = new MarkdownFormatter();
         String report = formatter.format(stats);
         assertTrue(report.contains("#### Общая информация"));
-        assertTrue(report.contains("| Файл(-ы) | `access.log` |"));
+        assertTrue(report.contains("| Файл(-ы) | access.log |"));
         assertTrue(report.contains("| Количество запросов | 100 |"));
     }
 
@@ -116,7 +116,7 @@ public class LogParserTest {
         AsciidocFormatter formatter = new AsciidocFormatter();
         String report = formatter.format(stats);
         assertTrue(report.contains("== Общая информация"));
-        assertTrue(report.contains("| Файл(-ы) | `access.log`"));
+        assertTrue(report.contains("| Файл(-ы) | access.log"));
         assertTrue(report.contains("| Количество запросов | 100"));
     }
 

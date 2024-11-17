@@ -14,6 +14,7 @@ public class AsciidocFormatter implements ReportFormatter {
     private static final String TABLE_END = "|===\n\n";
     private static final String COLUMN_SEPARATOR = " | ";
     private static final String NEW_LINE = "\n";
+    private static final String HEADER_COUNT = "Количество";
 
     /**
      * Форматирует объект статистики в текстовый отчёт в формате AsciiDoc.
@@ -50,7 +51,7 @@ public class AsciidocFormatter implements ReportFormatter {
             .append(TABLE_END);
         report.append("== Запрашиваемые ресурсы").append(NEW_LINE).append(NEW_LINE)
             .append(TABLE_START)
-            .append("| Ресурс").append(COLUMN_SEPARATOR).append("Количество").append(NEW_LINE);
+            .append("| Ресурс").append(COLUMN_SEPARATOR).append(HEADER_COUNT).append(NEW_LINE);
 
         for (Map.Entry<String, Integer> entry : stats.resourceCounts().entrySet()) {
             report.append(COLUMN_SEPARATOR).append(entry.getKey()).append(COLUMN_SEPARATOR)
@@ -61,7 +62,7 @@ public class AsciidocFormatter implements ReportFormatter {
         report.append("== Коды ответа").append(NEW_LINE).append(NEW_LINE)
             .append(TABLE_START)
             .append("| Код").append(COLUMN_SEPARATOR).append("Имя")
-            .append(COLUMN_SEPARATOR).append("Количество").append(NEW_LINE);
+            .append(COLUMN_SEPARATOR).append(HEADER_COUNT).append(NEW_LINE);
 
         for (Map.Entry<Integer, Integer> entry : stats.statusCounts().entrySet()) {
             report.append(COLUMN_SEPARATOR).append(entry.getKey()).append(COLUMN_SEPARATOR)

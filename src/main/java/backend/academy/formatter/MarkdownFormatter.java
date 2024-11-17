@@ -14,6 +14,7 @@ public class MarkdownFormatter implements ReportFormatter {
     private static final String ROW_END = " |\n";
     private static final String TABLE_HEADER_DIVIDER = "|:---------------------:|-------------:|\n";
     private static final String NEW_LINE = "\n";
+    private static final String HEADER_COUNT = "Количество";
 
     /**
      * Форматирует объект статистики в текстовый отчёт в формате Markdown.
@@ -46,7 +47,7 @@ public class MarkdownFormatter implements ReportFormatter {
             .append((int) stats.percentile95ResponseSize()).append("b").append(ROW_END)
             .append(NEW_LINE);
         report.append("#### Запрашиваемые ресурсы").append(NEW_LINE).append(NEW_LINE)
-            .append("| Ресурс").append(COLUMN_SEPARATOR).append("Количество").append(ROW_END)
+            .append("| Ресурс").append(COLUMN_SEPARATOR).append(HEADER_COUNT).append(ROW_END)
             .append(TABLE_HEADER_DIVIDER);
 
         for (Map.Entry<String, Integer> entry : stats.resourceCounts().entrySet()) {
@@ -57,7 +58,7 @@ public class MarkdownFormatter implements ReportFormatter {
 
         report.append("#### Коды ответа").append(NEW_LINE).append(NEW_LINE)
             .append("| Код").append(COLUMN_SEPARATOR).append("Имя").append(COLUMN_SEPARATOR)
-            .append("Количество").append(ROW_END)
+            .append(HEADER_COUNT).append(ROW_END)
             .append("|:---:|:---------------------:|-----------:|\n");
 
         for (Map.Entry<Integer, Integer> entry : stats.statusCounts().entrySet()) {

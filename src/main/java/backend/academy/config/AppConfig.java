@@ -12,16 +12,13 @@ import lombok.Getter;
  * Класс для обработки и хранения конфигурации приложения.
  * Обрабатывает аргументы командной строки и предоставляет доступ к параметрам.
  */
+@Getter
 public class AppConfig {
 
     private static final DateTimeFormatter ISO8601_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
-    @Getter
     private String pathOrUrl;
-    @Getter
     private String format;
-    @Getter
     private LocalDateTime from;
-    @Getter
     private LocalDateTime to;
 
     /**
@@ -57,10 +54,10 @@ public class AppConfig {
      */
     private Map<String, String> parseArgs(String[] args) {
         Map<String, String> argMap = new HashMap<>();
-        for (int i = 0; i < args.length; i++) {
-            if (args[i].startsWith("--")) {
-                String key = args[i].substring(2);
-                String value = (i + 1 < args.length && !args[i + 1].startsWith("--")) ? args[++i] : null;
+        for (int index = 0; index < args.length; index++) {
+            if (args[index].startsWith("--")) {
+                String key = args[index].substring(2);
+                String value = (index + 1 < args.length && !args[index + 1].startsWith("--")) ? args[++index] : null;
                 argMap.put(key, value);
             }
         }

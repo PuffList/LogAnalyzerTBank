@@ -12,25 +12,29 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.experimental.UtilityClass;
 
 /**
  * Парсер логов NGINX. Преобразует строки логов в объекты {@link LogRecord}.
  * Поддерживает чтение из локальных файлов и URL.
  */
+@UtilityClass
 public class LogParser {
-
-    private static final PrintStream ERR = System.err;
+    
     private static final int IP_ADRESS_INDEX = 1;
     private static final int DATE_TIME_INDEX = 2;
     private static final int RESOURCE_GROUP_INDEX = 4;
     private static final int STATUS_CODE_INDEX = 5;
     private static final int RESPONSE_SIZE_INDEX = 6;
+    private static final Logger LOGGER = Logger.getLogger(LogParser.class.getName());
     private static final Pattern LOG_PATTERN = Pattern.compile(
         "^(\\S+) \\S+ \\S+ \\[(.+?)] \"(\\S+) (\\S+) \\S+\" (\\d{3}) (\\d+) \"(.*?)\" \"(.*?)\""
     );
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss Z", Locale.ENGLISH);
+    private static final DateTimeFormatter DATE_FORMATTER =
+        DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss Z", Locale.ENGLISH);
 
     /**
      * Парсит лог-файлы по указанному пути или URL и возвращает список записей.
@@ -57,8 +61,7 @@ public class LogParser {
                 Files.lines(path).forEach(line -> parseLine(line, logs, from, to));
             }
         } catch (Exception e) {
-            ERR.println("Ошибка при обработке ресурса: " + pathOrUrl);
-            e.printStackTrace();
+            LOGGER.severe("Ошибка при обработке ресурса: " + pathOrUrl);
         }
 
         return logs;
@@ -81,8 +84,7 @@ public class LogParser {
                 LogRecord record = new LogRecord(ipAddress, timestamp, resource, statusCode, responseSize);
                 logs.add(record);
             } catch (Exception e) {
-                ERR.println("Ошибка парсинга строки: " + line);
-                e.printStackTrace();
+                LOGGER.severe("Ошибка парсинга строки: " + line);
             }
         }
     }
