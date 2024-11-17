@@ -57,7 +57,7 @@ public class AppConfig {
      */
     private Map<String, String> parseArgs(String[] args) {
         Map<String, String> argMap = new HashMap<>();
-        for (int index = 0; index < args.length; ) {
+        for (int index = 0; index < args.length;) {
             if (args[index].startsWith("--")) {
                 String key = args[index].substring(2);
                 String value = (index + 1 < args.length && !args[index + 1].startsWith("--")) ? args[++index] : null;
