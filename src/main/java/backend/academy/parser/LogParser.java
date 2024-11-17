@@ -2,7 +2,6 @@ package backend.academy.parser;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,7 +22,7 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public class LogParser {
-    
+
     private static final int IP_ADRESS_INDEX = 1;
     private static final int DATE_TIME_INDEX = 2;
     private static final int RESOURCE_GROUP_INDEX = 4;
@@ -81,8 +80,8 @@ public class LogParser {
                 String resource = matcher.group(RESOURCE_GROUP_INDEX);
                 int statusCode = Integer.parseInt(matcher.group(STATUS_CODE_INDEX));
                 int responseSize = Integer.parseInt(matcher.group(RESPONSE_SIZE_INDEX));
-                LogRecord record = new LogRecord(ipAddress, timestamp, resource, statusCode, responseSize);
-                logs.add(record);
+                LogRecord logRecord = new LogRecord(ipAddress, timestamp, resource, statusCode, responseSize);
+                logs.add(logRecord);
             } catch (Exception e) {
                 LOGGER.severe("Ошибка парсинга строки: " + line);
             }

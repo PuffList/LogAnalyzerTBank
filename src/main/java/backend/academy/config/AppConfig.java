@@ -15,6 +15,9 @@ import lombok.Getter;
 @Getter
 public class AppConfig {
 
+    private static final String ARG_PATH = "path";
+    private static final String ARG_FROM = "from";
+    private static final String ARG_TO = "to";
     private static final DateTimeFormatter ISO8601_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
     private String pathOrUrl;
     private String format;
@@ -30,19 +33,19 @@ public class AppConfig {
     public AppConfig(String[] args) {
         Map<String, String> argMap = parseArgs(args);
 
-        if (argMap.containsKey("path")) {
-            this.pathOrUrl = argMap.get("path");
+        if (argMap.containsKey(ARG_PATH)) {
+            this.pathOrUrl = argMap.get(ARG_PATH);
         } else {
             throw new IllegalArgumentException("Параметр --path обязателен.");
         }
 
         this.format = argMap.getOrDefault("format", "markdown");
 
-        if (argMap.containsKey("from")) {
-            this.from = parseDate(argMap.get("from"));
+        if (argMap.containsKey(ARG_FROM)) {
+            this.from = parseDate(argMap.get(ARG_FROM));
         }
-        if (argMap.containsKey("to")) {
-            this.to = parseDate(argMap.get("to"));
+        if (argMap.containsKey(ARG_TO)) {
+            this.to = parseDate(argMap.get(ARG_TO));
         }
     }
 
@@ -54,12 +57,13 @@ public class AppConfig {
      */
     private Map<String, String> parseArgs(String[] args) {
         Map<String, String> argMap = new HashMap<>();
-        for (int index = 0; index < args.length; index++) {
+        for (int index = 0; index < args.length; ) {
             if (args[index].startsWith("--")) {
                 String key = args[index].substring(2);
                 String value = (index + 1 < args.length && !args[index + 1].startsWith("--")) ? args[++index] : null;
                 argMap.put(key, value);
             }
+            index++;
         }
         return argMap;
     }

@@ -11,12 +11,14 @@ import backend.academy.parser.LogRecord;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 /**
  * Основное приложение для анализа логов.
  */
 public class ParserApp {
 
+    private static final Logger LOGGER = Logger.getLogger(ParserApp.class.getName());
     private final AppConfig config;
     private final OutputRender outputRender;
     private final Map<String, Supplier<ReportFormatter>> formatters;
@@ -62,8 +64,7 @@ public class ParserApp {
             outputRender.render(report);
 
         } catch (Exception e) {
-            outputRender.render("Ошибка: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.severe("Ошибка: " + e.getMessage());
         }
     }
 
