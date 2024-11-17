@@ -10,6 +10,11 @@ import java.util.Map;
  */
 public class AsciidocFormatter implements ReportFormatter {
 
+    private static final String TABLE_START = "|===\n";
+    private static final String TABLE_END = "|===\n\n";
+    private static final String COLUMN_SEPARATOR = " | ";
+    private static final String NEW_LINE = "\n";
+
     /**
      * Форматирует объект статистики в текстовый отчёт в формате AsciiDoc.
      *
@@ -19,42 +24,52 @@ public class AsciidocFormatter implements ReportFormatter {
     @Override
     public String format(Statistics stats) {
         StringBuilder report = new StringBuilder();
+        report.append("== Общая информация").append(NEW_LINE).append(NEW_LINE)
+            .append(TABLE_START)
+            .append("| Метрика").append(COLUMN_SEPARATOR).append("Значение").append(NEW_LINE)
+            .append(COLUMN_SEPARATOR).append("Файл(-ы)").append(COLUMN_SEPARATOR)
+            .append(stats.path()).append(NEW_LINE)
+            .append(COLUMN_SEPARATOR).append("Начальная дата").append(COLUMN_SEPARATOR)
+            .append(stats.from() != null
+                ? stats.from().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                : "-")
+            .append(NEW_LINE)
+            .append(COLUMN_SEPARATOR).append("Конечная дата").append(COLUMN_SEPARATOR)
+            .append(stats.to() != null
+                ? stats.to().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                : "-")
+            .append(NEW_LINE)
+            .append(COLUMN_SEPARATOR).append("Количество запросов").append(COLUMN_SEPARATOR)
+            .append(stats.totalRequests()).append(NEW_LINE)
+            .append(COLUMN_SEPARATOR).append("Средний размер ответа").append(COLUMN_SEPARATOR)
+            .append(String.format("%.2fb", stats.averageResponseSize()))
+            .append(NEW_LINE)
+            .append(COLUMN_SEPARATOR).append("95p размера ответа").append(COLUMN_SEPARATOR)
+            .append((int) stats.percentile95ResponseSize()).append("b")
+            .append(NEW_LINE)
+            .append(TABLE_END);
+        report.append("== Запрашиваемые ресурсы").append(NEW_LINE).append(NEW_LINE)
+            .append(TABLE_START)
+            .append("| Ресурс").append(COLUMN_SEPARATOR).append("Количество").append(NEW_LINE);
 
-        // Общая информация
-        report.append("== Общая информация\n\n");
-        report.append("|===\n");
-        report.append("| Метрика | Значение\n");
-        report.append("| Файл(-ы) | `").append(stats.path()).append("`\n");
-        report.append("| Начальная дата | ")
-            .append(stats.from() != null ? stats.from().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : "-")
-            .append("\n");
-        report.append("| Конечная дата | ")
-            .append(stats.to() != null ? stats.to().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : "-")
-            .append("\n");
-        report.append("| Количество запросов | ").append(stats.totalRequests()).append("\n");
-        report.append("| Средний размер ответа | ").append(String.format("%.0fb", stats.averageResponseSize())).append("\n");
-        report.append("| 95p размера ответа | ").append((int) stats.percentile95ResponseSize()).append("b\n");
-        report.append("|===\n\n");
-
-        // Запрашиваемые ресурсы
-        report.append("== Запрашиваемые ресурсы\n\n");
-        report.append("|===\n");
-        report.append("| Ресурс | Количество\n");
         for (Map.Entry<String, Integer> entry : stats.resourceCounts().entrySet()) {
-            report.append("| `").append(entry.getKey()).append("` | ").append(entry.getValue()).append("\n");
+            report.append(COLUMN_SEPARATOR).append(entry.getKey()).append(COLUMN_SEPARATOR)
+                .append(entry.getValue()).append(NEW_LINE);
         }
-        report.append("|===\n\n");
 
-        // Коды ответа
-        report.append("== Коды ответа\n\n");
-        report.append("|===\n");
-        report.append("| Код | Имя | Количество\n");
+        report.append(TABLE_END);
+        report.append("== Коды ответа").append(NEW_LINE).append(NEW_LINE)
+            .append(TABLE_START)
+            .append("| Код").append(COLUMN_SEPARATOR).append("Имя")
+            .append(COLUMN_SEPARATOR).append("Количество").append(NEW_LINE);
+
         for (Map.Entry<Integer, Integer> entry : stats.statusCounts().entrySet()) {
-            report.append("| ").append(entry.getKey()).append(" | ")
-                .append(HttpStatus.getDescriptionByCode(entry.getKey())).append(" | ")
-                .append(entry.getValue()).append("\n");
+            report.append(COLUMN_SEPARATOR).append(entry.getKey()).append(COLUMN_SEPARATOR)
+                .append(HttpStatus.getDescriptionByCode(entry.getKey())).append(COLUMN_SEPARATOR)
+                .append(entry.getValue()).append(NEW_LINE);
         }
-        report.append("|===\n");
+
+        report.append(TABLE_END);
 
         return report.toString();
     }

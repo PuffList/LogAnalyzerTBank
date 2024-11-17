@@ -18,18 +18,18 @@ import java.util.function.Supplier;
 public class ParserApp {
 
     private final AppConfig config;
-    private final OutputRender OutputRender;
+    private final OutputRender outputRender;
     private final Map<String, Supplier<ReportFormatter>> formatters;
 
     /**
      * Создаёт приложение с заданной конфигурацией и компонентами.
      *
      * @param config конфигурация приложения.
-     * @param OutputRender компонент для вывода результата.
+     * @param outputRender компонент для вывода результата.
      */
-    public ParserApp(AppConfig config, OutputRender OutputRender) {
+    public ParserApp(AppConfig config, OutputRender outputRender) {
         this.config = config;
-        this.OutputRender = OutputRender;
+        this.outputRender = outputRender;
         this.formatters = Map.of(
             "markdown", MarkdownFormatter::new,
             "adoc", AsciidocFormatter::new
@@ -48,7 +48,7 @@ public class ParserApp {
             List<LogRecord> logs = LogParser.parse(config.pathOrUrl(), config.from(), config.to());
 
             if (logs.isEmpty()) {
-                OutputRender.render("Ошибка: Логи отсутствуют или файл пуст.");
+                outputRender.render("Ошибка: Логи отсутствуют или файл пуст.");
                 return;
             }
 
@@ -59,10 +59,10 @@ public class ParserApp {
             stats.to(config.to());
             ReportFormatter formatter = getFormatter(config.format());
             String report = formatter.format(stats);
-            OutputRender.render(report);
+            outputRender.render(report);
 
         } catch (Exception e) {
-            OutputRender.render("Ошибка: " + e.getMessage());
+            outputRender.render("Ошибка: " + e.getMessage());
             e.printStackTrace();
         }
     }

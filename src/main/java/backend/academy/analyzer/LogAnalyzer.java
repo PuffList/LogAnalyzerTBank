@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
  */
 public class LogAnalyzer {
 
+    private static final double PERCENTILE_95 = 0.95;
     private final List<LogRecord> logs;
 
     /**
@@ -45,12 +46,10 @@ public class LogAnalyzer {
             })
             .collect(Collectors.toList());
 
-        // Вычисляем средний размер ответа
         totalResponseSize = responseSizes.stream().mapToLong(Integer::longValue).sum();
         stats.averageResponseSize((double) totalResponseSize / logs.size());
-        // Нахождение 95-го перцентиля
         Collections.sort(responseSizes);
-        int index95Percentile = (int) Math.ceil(0.95 * responseSizes.size()) - 1;
+        int index95Percentile = (int) Math.ceil(PERCENTILE_95 * responseSizes.size()) - 1;
         stats.percentile95ResponseSize(responseSizes.get(index95Percentile));
 
         return stats;

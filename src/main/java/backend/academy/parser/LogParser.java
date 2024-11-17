@@ -22,6 +22,11 @@ import java.util.regex.Pattern;
 public class LogParser {
 
     private static final PrintStream ERR = System.err;
+    private static final int IP_ADRESS_INDEX = 1;
+    private static final int DATE_TIME_INDEX = 2;
+    private static final int RESOURCE_GROUP_INDEX = 4;
+    private static final int STATUS_CODE_INDEX = 5;
+    private static final int RESPONSE_SIZE_INDEX = 6;
     private static final Pattern LOG_PATTERN = Pattern.compile(
         "^(\\S+) \\S+ \\S+ \\[(.+?)] \"(\\S+) (\\S+) \\S+\" (\\d{3}) (\\d+) \"(.*?)\" \"(.*?)\""
     );
@@ -64,15 +69,15 @@ public class LogParser {
 
         if (matcher.find()) {
             try {
-                OffsetDateTime timestamp = OffsetDateTime.parse(matcher.group(2), DATE_FORMATTER);
+                OffsetDateTime timestamp = OffsetDateTime.parse(matcher.group(DATE_TIME_INDEX), DATE_FORMATTER);
                 LocalDateTime logDate = timestamp.toLocalDateTime();
                 if ((from != null && logDate.isBefore(from)) || (to != null && logDate.isAfter(to))) {
                     return;
                 }
-                String ipAddress = matcher.group(1);
-                String resource = matcher.group(4);
-                int statusCode = Integer.parseInt(matcher.group(5));
-                int responseSize = Integer.parseInt(matcher.group(6));
+                String ipAddress = matcher.group(IP_ADRESS_INDEX);
+                String resource = matcher.group(RESOURCE_GROUP_INDEX);
+                int statusCode = Integer.parseInt(matcher.group(STATUS_CODE_INDEX));
+                int responseSize = Integer.parseInt(matcher.group(RESPONSE_SIZE_INDEX));
                 LogRecord record = new LogRecord(ipAddress, timestamp, resource, statusCode, responseSize);
                 logs.add(record);
             } catch (Exception e) {
