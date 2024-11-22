@@ -6,6 +6,7 @@ import backend.academy.config.AppConfig;
 import backend.academy.formatter.AsciidocFormatter;
 import backend.academy.formatter.MarkdownFormatter;
 import backend.academy.formatter.ReportFormatter;
+import backend.academy.parser.LogFilter;
 import backend.academy.parser.LogParser;
 import backend.academy.parser.LogRecord;
 import java.util.List;
@@ -47,7 +48,8 @@ public class ParserApp {
      */
     public void run() {
         try {
-            List<LogRecord> logs = LogParser.parse(config.pathOrUrl(), config.from(), config.to());
+            LogFilter filter = new LogFilter(config.from(), config.to(), config.filterField(), config.filterValue());
+            List<LogRecord> logs = LogParser.parse(config.pathOrUrl(), filter);
 
             if (logs.isEmpty()) {
                 outputRender.render("Ошибка: Логи отсутствуют или файл пуст.");

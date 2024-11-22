@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
  * - Частота кодов ответа.
  * - Средний размер ответа.
  * - 95-й перцентиль размера ответа.
+ * - Минимальный размер ответа.
+ * - Количество ответов размера 0b
  */
 public class LogAnalyzer {
 
@@ -51,7 +53,17 @@ public class LogAnalyzer {
         Collections.sort(responseSizes);
         int index95Percentile = (int) Math.ceil(PERCENTILE_95 * responseSizes.size()) - 1;
         stats.percentile95ResponseSize(responseSizes.get(index95Percentile));
-
+        int minimumResponseSize = responseSizes.stream()
+            .mapToInt(Integer::intValue)
+            .filter(size -> size > 0)
+            .min()
+            .orElse(0);
+        stats.minResponseSize(minimumResponseSize);
+        long zeroResponseCounter = responseSizes.stream()
+            .mapToInt(Integer::intValue)
+            .filter(size -> size == 0)
+            .count();
+        stats.zeroResponseCount(zeroResponseCounter);
         return stats;
     }
 }

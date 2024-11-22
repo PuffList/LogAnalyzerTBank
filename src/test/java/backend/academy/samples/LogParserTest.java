@@ -2,6 +2,7 @@ package backend.academy.samples;
 
 import backend.academy.formatter.AsciidocFormatter;
 import backend.academy.formatter.MarkdownFormatter;
+import backend.academy.parser.LogFilter;
 import backend.academy.parser.LogParser;
 import backend.academy.parser.LogRecord;
 import backend.academy.analyzer.LogAnalyzer;
@@ -25,7 +26,8 @@ public class LogParserTest {
         Files.write(tempFile.toPath(), List.of(
             "127.0.0.1 - - [01/Jan/2024:12:00:00 +0000] \"GET /index.html HTTP/1.1\" 200 1234 \"-\" \"Mozilla/5.0\""
         ));
-        List<LogRecord> records = LogParser.parse(tempFile.getAbsolutePath(), null, null);
+        LogFilter filter = new LogFilter(null, null, null, null);
+        List<LogRecord> records = LogParser.parse(tempFile.getAbsolutePath(), filter);
         assertEquals(1, records.size());
         assertEquals("127.0.0.1", records.get(0).ipAddress());
         assertEquals("/index.html", records.get(0).resource());
@@ -35,7 +37,8 @@ public class LogParserTest {
     @Test
     void testParseFromUrl() throws Exception {
         String url = "https://raw.githubusercontent.com/elastic/examples/master/Common%20Data%20Formats/nginx_logs/nginx_logs";
-        List<LogRecord> records = LogParser.parse(url, null, null);
+        LogFilter filter = new LogFilter(null, null, null, null);
+        List<LogRecord> records = LogParser.parse(url, filter);
         assertFalse(records.isEmpty());
     }
 
@@ -45,7 +48,8 @@ public class LogParserTest {
         Files.write(tempFile.toPath(), List.of(
             "127.0.0.1 - - [01/Jan/2024:12:00:00 +0000] \"GET /index.html HTTP/1.1\" 200 1234 \"-\" \"Mozilla/5.0\""
         ));
-        List<LogRecord> records = LogParser.parse(tempFile.getAbsolutePath(), null, null);
+        LogFilter filter = new LogFilter(null, null, null, null);
+        List<LogRecord> records = LogParser.parse(tempFile.getAbsolutePath(), filter);
         assertEquals(1, records.size());
         LogRecord record = records.get(0);
         assertEquals("127.0.0.1", record.ipAddress());
@@ -64,16 +68,10 @@ public class LogParserTest {
         ));
         LocalDateTime from = LocalDateTime.of(2024, 1, 2, 0, 0);
         LocalDateTime to = LocalDateTime.of(2024, 1, 2, 23, 59);
-        List<LogRecord> records = LogParser.parse(tempFile.getAbsolutePath(), null, null);
-        List<LogRecord> filtered = records.stream()
-            .filter(record -> {
-                LocalDateTime timestamp = record.timestamp().toLocalDateTime();
-                return (from == null || !timestamp.isBefore(from)) &&
-                    (to == null || !timestamp.isAfter(to));
-            })
-            .collect(Collectors.toList());
-        assertEquals(1, filtered.size());
-        assertEquals("/about.html", filtered.get(0).resource());
+        LogFilter filter = new LogFilter(from, to, null, null);
+        List<LogRecord> records = LogParser.parse(tempFile.getAbsolutePath(), filter);
+        assertEquals(1, records.size());
+        assertEquals("/about.html", records.get(0).resource());
         tempFile.delete();
     }
 
@@ -82,14 +80,32 @@ public class LogParserTest {
         List<LogRecord> records = List.of(
             new LogRecord("127.0.0.1", OffsetDateTime.now(), "/index.html", 200, 500),
             new LogRecord("127.0.0.1", OffsetDateTime.now(), "/index.html", 200, 1000),
-            new LogRecord("127.0.0.1", OffsetDateTime.now(), "/about.html", 404, 300)
+            new LogRecord("127.0.0.1", OffsetDateTime.now(), "/about.html", 404, 300),
+            new LogRecord("127.0.0.1", OffsetDateTime.now(), "/about.html", 200, 0)
         );
         LogAnalyzer analyzer = new LogAnalyzer(records);
         Statistics stats = analyzer.getStatistics();
-        assertEquals(3, stats.totalRequests());
+
+        assertEquals(4, stats.totalRequests());
         assertEquals(2, stats.resourceCounts().get("/index.html"));
-        assertEquals(1, stats.resourceCounts().get("/about.html"));
+        assertEquals(2, stats.resourceCounts().get("/about.html"));
         assertEquals(1000, stats.percentile95ResponseSize());
+        assertEquals(300, stats.minResponseSize());
+        assertEquals(1, stats.zeroResponseCount());
+    }
+
+    @Test
+    void testLogFilteringByMethod() throws Exception {
+        File tempFile = File.createTempFile("test", ".log");
+        Files.write(tempFile.toPath(), List.of(
+            "127.0.0.1 - - [01/Jan/2024:12:00:00 +0000] \"GET /index.html HTTP/1.1\" 200 1234 \"-\" \"Mozilla/5.0\"",
+            "127.0.0.1 - - [01/Jan/2024:12:00:01 +0000] \"POST /submit HTTP/1.1\" 200 5678 \"-\" \"Mozilla/5.0\""
+        ));
+        LogFilter filter = new LogFilter(null, null, "method", "GET");
+        List<LogRecord> records = LogParser.parse(tempFile.getAbsolutePath(), filter);
+        assertEquals(1, records.size());
+        assertEquals("/index.html", records.get(0).resource());
+        tempFile.delete();
     }
 
     @Test

@@ -48,6 +48,10 @@ public class AsciidocFormatter implements ReportFormatter {
             .append(COLUMN_SEPARATOR).append("95p размера ответа").append(COLUMN_SEPARATOR)
             .append((int) stats.percentile95ResponseSize()).append("b")
             .append(NEW_LINE)
+            .append(COLUMN_SEPARATOR).append("Минимальный размер ответа").append(COLUMN_SEPARATOR)
+            .append(stats.minResponseSize()).append(NEW_LINE)
+            .append(COLUMN_SEPARATOR).append("Количество ответов размера 0b").append(COLUMN_SEPARATOR)
+            .append(stats.zeroResponseCount()).append(NEW_LINE)
             .append(TABLE_END);
         report.append("== Запрашиваемые ресурсы").append(NEW_LINE).append(NEW_LINE)
             .append(TABLE_START)

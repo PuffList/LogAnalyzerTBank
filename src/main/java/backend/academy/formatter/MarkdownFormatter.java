@@ -45,6 +45,8 @@ public class MarkdownFormatter implements ReportFormatter {
             .append(ROW_END)
             .append("| 95p размера ответа").append(COLUMN_SEPARATOR)
             .append((int) stats.percentile95ResponseSize()).append("b").append(ROW_END)
+            .append("| Минимальный размер ответа").append(COLUMN_SEPARATOR).append(stats.minResponseSize()).append(ROW_END)
+            .append("| Количество ответов размера 0b").append(COLUMN_SEPARATOR).append(stats.zeroResponseCount()).append(ROW_END)
             .append(NEW_LINE);
         report.append("#### Запрашиваемые ресурсы").append(NEW_LINE).append(NEW_LINE)
             .append("| Ресурс").append(COLUMN_SEPARATOR).append(HEADER_COUNT).append(ROW_END)

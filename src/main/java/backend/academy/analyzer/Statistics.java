@@ -13,6 +13,8 @@ import lombok.Setter;
  * - Частота кодов ответа.
  * - Средний размер ответа.
  * - 95-й перцентиль размера ответа.
+ * - Минимальный размер ответа.
+ * - Количество ответов размера 0b
  */
 @Getter
 public class Statistics {
@@ -31,6 +33,10 @@ public class Statistics {
     private double averageResponseSize;
     @Setter
     private double percentile95ResponseSize;
+    @Setter
+    private int minResponseSize;
+    @Setter
+    private long zeroResponseCount;
 
     public Statistics() {
         this.resourceCounts = new HashMap<>();

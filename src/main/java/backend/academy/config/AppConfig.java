@@ -18,11 +18,15 @@ public class AppConfig {
     private static final String ARG_PATH = "path";
     private static final String ARG_FROM = "from";
     private static final String ARG_TO = "to";
+    private static final String ARG_FILTER_FIELD = "filter-field";
+    private static final String ARG_FILTER_VALUE = "filter-value";
     private static final DateTimeFormatter ISO8601_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
     private String pathOrUrl;
     private String format;
     private LocalDateTime from;
     private LocalDateTime to;
+    private String filterField;
+    private String filterValue;
 
     /**
      * Создаёт конфигурацию приложения на основе аргументов командной строки.
@@ -47,6 +51,9 @@ public class AppConfig {
         if (argMap.containsKey(ARG_TO)) {
             this.to = parseDate(argMap.get(ARG_TO));
         }
+
+        this.filterField = argMap.get(ARG_FILTER_FIELD);
+        this.filterValue = argMap.get(ARG_FILTER_VALUE);
     }
 
     /**

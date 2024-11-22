@@ -25,9 +25,11 @@ public class LogParser {
 
     private static final int IP_ADRESS_INDEX = 1;
     private static final int DATE_TIME_INDEX = 2;
+    private static final int METHOD_INDEX = 3;
     private static final int RESOURCE_GROUP_INDEX = 4;
     private static final int STATUS_CODE_INDEX = 5;
     private static final int RESPONSE_SIZE_INDEX = 6;
+    private static final int AGENT_INDEX = 8;
     private static final Logger LOGGER = Logger.getLogger(LogParser.class.getName());
     private static final Pattern LOG_PATTERN = Pattern.compile(
         "^(\\S+) \\S+ \\S+ \\[(.+?)] \"(\\S+) (\\S+) \\S+\" (\\d{3}) (\\d+) \"(.*?)\" \"(.*?)\""
@@ -39,11 +41,10 @@ public class LogParser {
      * Парсит лог-файлы по указанному пути или URL и возвращает список записей.
      *
      * @param pathOrUrl путь к файлу логов или URL.
-     * @param from начальная дата диапазона анализа (может быть null).
-     * @param to конечная дата диапазона анализа (может быть null).
+     * @param filter обозначение диапазона анализа (может быть null).
      * @return список объектов {@link LogRecord}.
      */
-    public static List<LogRecord> parse(String pathOrUrl, LocalDateTime from, LocalDateTime to) {
+    public static List<LogRecord> parse(String pathOrUrl, LogFilter filter) {
         List<LogRecord> logs = new ArrayList<>();
 
         try {
@@ -52,12 +53,12 @@ public class LogParser {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        parseLine(line, logs, from, to);
+                        parseLine(line, logs, filter);
                     }
                 }
             } else {
                 Path path = Path.of(pathOrUrl);
-                Files.lines(path).forEach(line -> parseLine(line, logs, from, to));
+                Files.lines(path).forEach(line -> parseLine(line, logs, filter));
             }
         } catch (Exception e) {
             LOGGER.severe("Ошибка при обработке ресурса: " + pathOrUrl);
@@ -66,26 +67,43 @@ public class LogParser {
         return logs;
     }
 
-    private static void parseLine(String line, List<LogRecord> logs, LocalDateTime from, LocalDateTime to) {
+    private static void parseLine(String line, List<LogRecord> logs, LogFilter filter) {
         Matcher matcher = LOG_PATTERN.matcher(line);
 
         if (matcher.find()) {
             try {
                 OffsetDateTime timestamp = OffsetDateTime.parse(matcher.group(DATE_TIME_INDEX), DATE_FORMATTER);
                 LocalDateTime logDate = timestamp.toLocalDateTime();
-                if ((from != null && logDate.isBefore(from)) || (to != null && logDate.isAfter(to))) {
+                if ((filter.from() != null && logDate.isBefore(filter.from())) || (filter.to() != null && logDate.isAfter(filter.to()))) {
                     return;
                 }
                 String ipAddress = matcher.group(IP_ADRESS_INDEX);
                 String resource = matcher.group(RESOURCE_GROUP_INDEX);
+                String method = matcher.group(METHOD_INDEX);
+                String userAgent = matcher.group(AGENT_INDEX);
                 int statusCode = Integer.parseInt(matcher.group(STATUS_CODE_INDEX));
                 int responseSize = Integer.parseInt(matcher.group(RESPONSE_SIZE_INDEX));
+                if (!applyFilter(filter.filterField(), filter.filterValue(), method, userAgent)) {
+                    return;
+                }
                 LogRecord logRecord = new LogRecord(ipAddress, timestamp, resource, statusCode, responseSize);
                 logs.add(logRecord);
             } catch (Exception e) {
                 LOGGER.severe("Ошибка парсинга строки: " + line);
             }
         }
+    }
+
+    private static boolean applyFilter(String filterField, String filterValue, String method, String userAgent) {
+        if (filterField == null || filterValue == null) {
+            return true;
+        }
+
+        return switch (filterField.toLowerCase()) {
+            case "method" -> method.equalsIgnoreCase(filterValue); // Сравнение по HTTP-методу
+            case "agent" -> userAgent.toLowerCase().matches(filterValue.toLowerCase().replace("*", ".*")); // Сравнение по User-Agent
+            default -> true;
+        };
     }
 
 }
