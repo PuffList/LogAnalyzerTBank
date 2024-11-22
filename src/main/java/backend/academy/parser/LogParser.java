@@ -70,28 +70,36 @@ public class LogParser {
     private static void parseLine(String line, List<LogRecord> logs, LogFilter filter) {
         Matcher matcher = LOG_PATTERN.matcher(line);
 
-        if (matcher.find()) {
-            try {
-                OffsetDateTime timestamp = OffsetDateTime.parse(matcher.group(DATE_TIME_INDEX), DATE_FORMATTER);
-                LocalDateTime logDate = timestamp.toLocalDateTime();
-                if ((filter.from() != null && logDate.isBefore(filter.from())) || (filter.to() != null && logDate.isAfter(filter.to()))) {
-                    return;
-                }
-                String ipAddress = matcher.group(IP_ADRESS_INDEX);
-                String resource = matcher.group(RESOURCE_GROUP_INDEX);
-                String method = matcher.group(METHOD_INDEX);
-                String userAgent = matcher.group(AGENT_INDEX);
-                int statusCode = Integer.parseInt(matcher.group(STATUS_CODE_INDEX));
-                int responseSize = Integer.parseInt(matcher.group(RESPONSE_SIZE_INDEX));
-                if (!applyFilter(filter.filterField(), filter.filterValue(), method, userAgent)) {
-                    return;
-                }
-                LogRecord logRecord = new LogRecord(ipAddress, timestamp, resource, statusCode, responseSize);
-                logs.add(logRecord);
-            } catch (Exception e) {
-                LOGGER.severe("Ошибка парсинга строки: " + line);
-            }
+        if (!matcher.find()) {
+            return;
         }
+
+        try {
+            OffsetDateTime timestamp = OffsetDateTime.parse(matcher.group(DATE_TIME_INDEX), DATE_FORMATTER);
+            LocalDateTime logDate = timestamp.toLocalDateTime();
+            boolean isOutsideDateRange = (filter.from() != null && logDate.isBefore(filter.from())) ||
+                (filter.to() != null && logDate.isAfter(filter.to()));
+            if (isOutsideDateRange) {
+                return;
+            }
+            String ipAddress = matcher.group(IP_ADRESS_INDEX);
+            String resource = matcher.group(RESOURCE_GROUP_INDEX);
+            String method = matcher.group(METHOD_INDEX);
+            String userAgent = matcher.group(AGENT_INDEX);
+            int statusCode = Integer.parseInt(matcher.group(STATUS_CODE_INDEX));
+            int responseSize = Integer.parseInt(matcher.group(RESPONSE_SIZE_INDEX));
+            boolean doesNotMatchFilter = !applyFilter(filter.filterField(), filter.filterValue(), method, userAgent);
+            if (doesNotMatchFilter) {
+                return;
+            }
+            LogRecord logRecord = new LogRecord(ipAddress, timestamp, resource, statusCode, responseSize);
+            logs.add(logRecord);
+        } catch (Exception e) {
+            LOGGER.severe("Ошибка парсинга строки: " + line);
+        }
+
+
+
     }
 
     private static boolean applyFilter(String filterField, String filterValue, String method, String userAgent) {
@@ -100,8 +108,9 @@ public class LogParser {
         }
 
         return switch (filterField.toLowerCase()) {
-            case "method" -> method.equalsIgnoreCase(filterValue); // Сравнение по HTTP-методу
-            case "agent" -> userAgent.toLowerCase().matches(filterValue.toLowerCase().replace("*", ".*")); // Сравнение по User-Agent
+            case "method" -> method.equalsIgnoreCase(filterValue);
+            case "agent" -> userAgent.toLowerCase()
+                .matches(filterValue.toLowerCase().replace("*", ".*"));
             default -> true;
         };
     }
