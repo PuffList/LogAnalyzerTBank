@@ -69,37 +69,45 @@ public class LogParser {
 
     private static void parseLine(String line, List<LogRecord> logs, LogFilter filter) {
         Matcher matcher = LOG_PATTERN.matcher(line);
+        boolean shouldAddLog = true;
 
         if (!matcher.find()) {
-            return;
+            shouldAddLog = false;
         }
 
         try {
-            OffsetDateTime timestamp = OffsetDateTime.parse(matcher.group(DATE_TIME_INDEX), DATE_FORMATTER);
-            LocalDateTime logDate = timestamp.toLocalDateTime();
-            boolean isOutsideDateRange = (filter.from() != null && logDate.isBefore(filter.from())) ||
-                (filter.to() != null && logDate.isAfter(filter.to()));
-            if (isOutsideDateRange) {
-                return;
+            if (shouldAddLog) {
+                OffsetDateTime timestamp = OffsetDateTime.parse(matcher.group(DATE_TIME_INDEX), DATE_FORMATTER);
+                LocalDateTime logDate = timestamp.toLocalDateTime();
+                boolean isOutsideDateRange = (filter.from() != null && logDate.isBefore(filter.from()))
+                    || (filter.to() != null && logDate.isAfter(filter.to()));
+                if (isOutsideDateRange) {
+                    shouldAddLog = false;
+                }
+
+                if (shouldAddLog) {
+                    String ipAddress = matcher.group(IP_ADRESS_INDEX);
+                    String resource = matcher.group(RESOURCE_GROUP_INDEX);
+                    String method = matcher.group(METHOD_INDEX);
+                    String userAgent = matcher.group(AGENT_INDEX);
+                    int statusCode = Integer.parseInt(matcher.group(STATUS_CODE_INDEX));
+                    int responseSize = Integer.parseInt(matcher.group(RESPONSE_SIZE_INDEX));
+                    boolean doesNotMatchFilter = !applyFilter(
+                        filter.filterField(),
+                        filter.filterValue(),
+                        method, userAgent);
+                    if (doesNotMatchFilter) {
+                        shouldAddLog = false;
+                    }
+                    if (shouldAddLog) {
+                        LogRecord logRecord = new LogRecord(ipAddress, timestamp, resource, statusCode, responseSize);
+                        logs.add(logRecord);
+                    }
+                }
             }
-            String ipAddress = matcher.group(IP_ADRESS_INDEX);
-            String resource = matcher.group(RESOURCE_GROUP_INDEX);
-            String method = matcher.group(METHOD_INDEX);
-            String userAgent = matcher.group(AGENT_INDEX);
-            int statusCode = Integer.parseInt(matcher.group(STATUS_CODE_INDEX));
-            int responseSize = Integer.parseInt(matcher.group(RESPONSE_SIZE_INDEX));
-            boolean doesNotMatchFilter = !applyFilter(filter.filterField(), filter.filterValue(), method, userAgent);
-            if (doesNotMatchFilter) {
-                return;
-            }
-            LogRecord logRecord = new LogRecord(ipAddress, timestamp, resource, statusCode, responseSize);
-            logs.add(logRecord);
         } catch (Exception e) {
             LOGGER.severe("Ошибка парсинга строки: " + line);
         }
-
-
-
     }
 
     private static boolean applyFilter(String filterField, String filterValue, String method, String userAgent) {
